@@ -129,9 +129,7 @@ class Coach:
             0,
             0,
         )
-        # result = {}
-        example["output_ids"] = original
+        example["labels"] = original
         example["input_ids"] = modified
-        example["delete_marks"] = inserts
-        example["insert_marks"] = deletes
+        example["dni_labels"] = [deletes, inserts]
         return example
