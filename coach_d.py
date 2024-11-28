@@ -5,6 +5,7 @@ class Coach:
     def __init__(self, err_source, tokenizer):
         self.err_source = err_source
         self.tokenizer = tokenizer
+        self.pad_base = self.tokenizer(self.tokenizer.pad_token)["input_ids"]
 
     def delete_tokens(self, ds, dc, t, im, dm):
         de = ds + dc
@@ -129,7 +130,30 @@ class Coach:
             0,
             0,
         )
+        if len(original) > self.tokenizer.model_max_length:
+            original = original[: self.tokenizer.model_max_length]
+        if len(modified) > self.tokenizer.model_max_length:
+            modified = modified[: self.tokenizer.model_max_length]
+        if len(inserts) > self.tokenizer.model_max_length:
+            inserts = inserts[: self.tokenizer.model_max_length]
+        if len(deletes) > self.tokenizer.model_max_length:
+            deletes = deletes[: self.tokenizer.model_max_length]
+
+        if len(original) < self.tokenizer.model_max_length:
+            original = original + self.pad_base * (
+                self.tokenizer.model_max_length - len(original)
+            )
+        if len(modified) < self.tokenizer.model_max_length:
+            modified = modified + self.pad_base * (
+                self.tokenizer.model_max_length - len(modified)
+            )
+        if len(inserts) < self.tokenizer.model_max_length:
+            inserts = inserts + [0] * (self.tokenizer.model_max_length - len(inserts))
+        if len(deletes) < self.tokenizer.model_max_length:
+            deletes = deletes + [0] * (self.tokenizer.model_max_length - len(deletes))
+        # result = {}
         example["labels"] = original
+        del example["attention_mask"]
         example["input_ids"] = modified
         example["dni_labels"] = [deletes, inserts]
         return example
