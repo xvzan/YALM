@@ -26,7 +26,7 @@ class YALMOutputWithCrossAttentions(ModelOutput):
     dni_points: torch.FloatTensor = None
     past_key_values: Optional[Tuple[Tuple[torch.FloatTensor]]] = None
     hidden_states: Optional[Tuple[torch.FloatTensor, ...]] = None
-    attentions: Optional[Tuple[torch.FloatTensor, ...]] = None
+    # attentions: Optional[Tuple[torch.FloatTensor, ...]] = None
     cross_attentions: Optional[Tuple[torch.FloatTensor, ...]] = None
 
 
@@ -72,7 +72,7 @@ class YALMGPT2Model(GPT2PreTrainedModel):
         transformer_outputs = self.transformer(
             input_ids,
             past_key_values=past_key_values,
-            attention_mask=attention_mask,
+            attention_mask=None,
             token_type_ids=token_type_ids,
             position_ids=position_ids,
             head_mask=head_mask,
@@ -122,11 +122,9 @@ class YALMGPT2Model(GPT2PreTrainedModel):
                 shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1)
             )
             dni_loss_fct = MSELoss()
-            dni_loss = dni_loss_fct(
-                shift_points.view(-1, shift_points.size(-1)), shift_dni.view(-1)
-            )
-            
-            if dni_loss >= self.dni_loss_threshold:
+            dni_loss = dni_loss_fct(shift_points, shift_dni)
+
+            if dni_loss >= self.dni_loss_threshold or dni_loss >= loss:
                 loss = loss + dni_loss
 
         if not return_dict:
@@ -139,6 +137,6 @@ class YALMGPT2Model(GPT2PreTrainedModel):
             dni_points=dni_points,
             past_key_values=transformer_outputs.past_key_values,
             hidden_states=transformer_outputs.hidden_states,
-            attentions=transformer_outputs.attentions,
+            # attentions=transformer_outputs.attentions,
             cross_attentions=transformer_outputs.cross_attentions,
         )
