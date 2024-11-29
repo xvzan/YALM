@@ -41,7 +41,7 @@ class Coach:
 
         num_tokens = len(original_tokens)
         modified_tokens = tokens.copy()
-        is_delete = random.random() < 0.7
+        is_delete = random.random() < 0.8
         delete_count = 0
         insert_count = 0
 
@@ -69,16 +69,19 @@ class Coach:
                 )
                 ts += insert_count
         else:
-            insert_count = random.randint(1, int(num_tokens * 0.5))
-            insert_start = random.randint(1, num_tokens)
-            modified_tokens, insert_marks, delete_marks = self.insert_tokens(
-                insert_start,
-                self.err_tokens_at_len(insert_count),
-                modified_tokens,
-                insert_marks,
-                delete_marks,
-            )
-            ts = insert_start + insert_count
+            if random.random() < 0.9:
+                insert_count = random.randint(1, int(num_tokens * 0.5))
+                insert_start = random.randint(1, num_tokens)
+                modified_tokens, insert_marks, delete_marks = self.insert_tokens(
+                    insert_start,
+                    self.err_tokens_at_len(insert_count),
+                    modified_tokens,
+                    insert_marks,
+                    delete_marks,
+                )
+                ts = insert_start + insert_count
+            else:
+                insert_count = num_token
         ec = delete_count + insert_count
 
         return original_tokens, modified_tokens, insert_marks, delete_marks, ts, ec
@@ -86,7 +89,7 @@ class Coach:
     def recursion_modify(self, original, modified, inserts, deletes, ts, ec):
         _, mm, ii, dd, ts2, ec2 = self.generate_data(modified[ts:])
         ec = ec + ec2
-        if ts2 < len(mm) - 2 and ec / len(original) < 0.9 and random.random() < 0.9:
+        if ts2 < len(mm) - 2 and ec / len(original) < 0.5 and random.random() < 0.9:
             _, mm, ii, dd, _, ec = self.recursion_modify(original, mm, ii, dd, ts2, ec)
         modified = modified[:ts] + mm
         inserts = inserts[:ts] + ii
