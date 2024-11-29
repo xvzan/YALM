@@ -44,7 +44,7 @@ class Coach:
         # def modify_tokens(tokens):
         num_tokens = len(tokens)
         modified_tokens = tokens.copy()
-        is_delete = random.random() < 0.7
+        is_delete = random.random() < 0.8
         delete_count = 0
         insert_count = 0
 
@@ -74,17 +74,20 @@ class Coach:
                 )
                 ts += insert_count
         else:
-            insert_count = random.randint(1, int(num_tokens * 0.5))
-            insert_start = random.randint(1, num_tokens)
-            modified_tokens, insert_marks, delete_marks = self.insert_tokens(
-                insert_start,
-                self.err_tokens_at_len(insert_count),
-                modified_tokens,
-                insert_marks,
-                delete_marks,
-            )
-            he = insert_start - 1
-            ts = insert_start + insert_count
+            if random.random() < 0.9:
+                insert_count = random.randint(1, int(num_tokens * 0.5))
+                insert_start = random.randint(1, num_tokens)
+                modified_tokens, insert_marks, delete_marks = self.insert_tokens(
+                    insert_start,
+                    self.err_tokens_at_len(insert_count),
+                    modified_tokens,
+                    insert_marks,
+                    delete_marks,
+                )
+                he = insert_start - 1
+                ts = insert_start + insert_count
+            else:
+                insert_count = num_tokens
         # print(delete_count+insert_count)
         ec = delete_count + insert_count
 
