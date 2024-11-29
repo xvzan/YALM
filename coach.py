@@ -81,7 +81,7 @@ class Coach:
                 )
                 ts = insert_start + insert_count
             else:
-                insert_count = num_token
+                insert_count = num_tokens
         ec = delete_count + insert_count
 
         return original_tokens, modified_tokens, insert_marks, delete_marks, ts, ec
