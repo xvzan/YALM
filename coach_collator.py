@@ -92,14 +92,18 @@ class CoachCollator(DataCollatorMixin):
         return original_tokens, modified_tokens, insert_marks, delete_marks, ts, ec
 
     def recursion_modify(self, original, modified, inserts, deletes, ts, ec):
-        _, mm, ii, dd, ts2, ec2 = self.generate_data(modified[ts:])
-        ec = ec + ec2
-        if ts2 < len(mm) - 2 and ec / len(original) < 0.5 and random.random() < 0.9:
-            _, mm, ii, dd, _, ec = self.recursion_modify(original, mm, ii, dd, ts2, ec)
-        modified = modified[:ts] + mm
-        inserts = inserts[:ts] + ii
-        deletes = deletes[:ts] + dd
-        return original, modified, inserts, deletes, ts, ec
+        if (
+            ts < len(modified) - 2
+            and ec / len(original) < 0.5
+            and random.random() < 0.95
+        ):
+            _, mm, ii, dd, ts2, ec2 = self.generate_data(modified[ts:])
+            ec = ec + ec2
+            _, mm2, ii2, dd2, ec = self.recursion_modify(original, mm, ii, dd, ts2, ec)
+            modified = modified[:ts] + mm2
+            inserts = inserts[:ts] + ii2
+            deletes = deletes[:ts] + dd2
+        return original, modified, inserts, deletes, ec
 
     def __call__(self, features: List[InputDataClass]) -> Dict[str, Any]:
         if not isinstance(features[0], Mapping):
@@ -107,7 +111,7 @@ class CoachCollator(DataCollatorMixin):
         edited_features = []
         for example in features:
             edited = {}
-            original, modified, inserts, deletes, _, _ = self.recursion_modify(
+            original, modified, inserts, deletes, _ = self.recursion_modify(
                 example["input_ids"], example["input_ids"], [], [], 0, 0
             )
             if len(original) > self.tokenizer.model_max_length:
@@ -148,7 +152,9 @@ class CoachCollator(DataCollatorMixin):
                 if isinstance(v, torch.Tensor):
                     batch[k] = torch.stack([f[k] for f in edited_features])
                 elif isinstance(v, np.ndarray):
-                    batch[k] = torch.from_numpy(np.stack([f[k] for f in edited_features]))
+                    batch[k] = torch.from_numpy(
+                        np.stack([f[k] for f in edited_features])
+                    )
                 else:
                     batch[k] = torch.tensor([f[k] for f in edited_features])
         return batch

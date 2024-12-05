@@ -106,26 +106,26 @@ class CoachCollator(DataCollatorMixin):
         he = he - 1
         if he >= len(modified) - ts:
             # print("head")
-            _, mm, ii, dd, he2, ts2, ec2 = self.generate_data(modified[: he + 1])
-            ec = ec + ec2
             if ts2 < len(mm) - 2 and ec / len(original) < 0.5 and random.random() < 0.8:
+                _, mm, ii, dd, he2, ts2, ec2 = self.generate_data(modified[: he + 1])
+                ec = ec + ec2
                 _, mm, ii, dd, _, _, ec = self.recursion_modify(
                     original, mm, ii, dd, he2, ts2, ec
-                )
-            modified = mm + modified[he + 1 :]
-            inserts = ii + inserts[he + 1 :]
-            deletes = dd + deletes[he + 1 :]
+                    )
+                modified = mm + modified[he + 1 :]
+                inserts = ii + inserts[he + 1 :]
+                deletes = dd + deletes[he + 1 :]
         else:
             # print("tail")
-            _, mm, ii, dd, he2, ts2, ec2 = self.generate_data(modified[ts:])
-            ec = ec + ec2
             if ts2 < len(mm) - 2 and ec / len(original) < 0.5 and random.random() < 0.8:
+                _, mm, ii, dd, he2, ts2, ec2 = self.generate_data(modified[ts:])
+                ec = ec + ec2
                 _, mm, ii, dd, _, _, ec = self.recursion_modify(
                     original, mm, ii, dd, he2, ts2, ec
                 )
-            modified = modified[:ts] + mm
-            inserts = inserts[:ts] + ii
-            deletes = deletes[:ts] + dd
+                modified = modified[:ts] + mm
+                inserts = inserts[:ts] + ii
+                deletes = deletes[:ts] + dd
         return original, modified, inserts, deletes, he, ts, ec
 
     def __call__(self, features: List[InputDataClass]) -> Dict[str, Any]:
