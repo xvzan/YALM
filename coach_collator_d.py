@@ -134,8 +134,9 @@ class CoachCollator(DataCollatorMixin):
         edited_features = []
         for example in features:
             edited = {}
+            tokens = [self.tokenizer.bos_token] + example["input_ids"]
             original, modified, inserts, deletes, _, _ = self.recursion_modify(
-                example["input_ids"], example["input_ids"], [], [], 0, 0
+                tokens, tokens, [], [], 0, 0
             )
             if len(original) > self.tokenizer.model_max_length:
                 original = original[: self.tokenizer.model_max_length]
