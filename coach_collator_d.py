@@ -11,6 +11,7 @@ class CoachCollator(DataCollatorMixin):
         self.err_source = err_source
         self.tokenizer = tokenizer
         self.pad_base = self.tokenizer(self.tokenizer.pad_token)["input_ids"]
+        self.bos_base = self.tokenizer(self.tokenizer.bos_token)["input_ids"]
 
     def delete_tokens(self, ds, dc, t, im, dm):
         de = ds + dc
@@ -134,7 +135,7 @@ class CoachCollator(DataCollatorMixin):
         edited_features = []
         for example in features:
             edited = {}
-            tokens = [self.tokenizer.bos_token] + example["input_ids"]
+            tokens = self.bos_base + example["input_ids"]
             original, modified, inserts, deletes, _, _ = self.recursion_modify(
                 tokens, tokens, [], [], 0, 0
             )
