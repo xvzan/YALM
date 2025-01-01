@@ -91,31 +91,31 @@ class YALMGPT2Model(GPT2PreTrainedModel):
             torch.cuda.set_device(self.transformer.first_device)
             hidden_states = hidden_states.to(self.lm_head.weight.device)
 
-        lm_logits = self.lm_head(hidden_states[...,:self.lm_n_embd])
-        dni_points = self.dni_head(hidden_states[...,self.lm_n_embd:])
+        lm_logits = self.lm_head(hidden_states[..., : self.lm_n_embd])
+        dni_points = self.dni_head(hidden_states[..., self.lm_n_embd :])
 
         loss = None
         if labels is not None:
             # move labels to correct device to enable model parallelism
             labels = labels.to(lm_logits.device)
-            
+
             # print("lm_logits",lm_logits.size())
             # print("labels",labels.size())
-            
+
             # Shift so that tokens < n predict n
             shift_logits = lm_logits.contiguous()
             shift_labels = labels.contiguous()
-            
+
             # print("shift_logits",shift_logits.size())
             # print("shift_labels",shift_labels.size())
-            
+
             dni_labels = dni_labels.to(dni_points.device)
             shift_points = dni_points.contiguous()
             shift_dni = dni_points.contiguous()
-            
+
             # print("shift_points",shift_points.size())
             # print("shift_dni",shift_dni.size())
-            
+
             # Flatten the tokens
             loss_fct = CrossEntropyLoss()
             loss = loss_fct(
@@ -124,8 +124,13 @@ class YALMGPT2Model(GPT2PreTrainedModel):
             dni_loss_fct = MSELoss()
             dni_loss = dni_loss_fct(shift_points, shift_dni)
 
-            if dni_loss >= self.dni_loss_threshold or dni_loss >= loss:
-                loss = loss + dni_loss
+            # if dni_loss >= self.dni_loss_threshold or dni_loss >= loss:
+            #     loss = loss + dni_loss
+            loss = torch.where(
+                dni_loss > torch.min(loss, self.dni_loss_threshold),
+                loss + dni_loss,
+                loss,
+            )
 
         if not return_dict:
             output = (lm_logits,) + transformer_outputs[1:]
