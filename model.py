@@ -39,7 +39,7 @@ class YALMGPT2Model(GPT2PreTrainedModel):
         self.lm_n_embd = config.n_embd - self.dni_hidden_size
         self.lm_head = nn.Linear(self.lm_n_embd, config.vocab_size, bias=False)
         self.dni_head = nn.Linear(self.dni_hidden_size, 2, bias=False)
-        self.dni_loss_threshold = config.dni_loss_threshold
+        self.dni_loss_threshold = torch.tensor(config.dni_loss_threshold)
 
         # Model parallel
         self.model_parallel = False
