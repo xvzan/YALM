@@ -99,30 +99,16 @@ class YALMGPT2Model(GPT2PreTrainedModel):
             # move labels to correct device to enable model parallelism
             labels = labels.to(lm_logits.device)
 
-            # print("lm_logits",lm_logits.size())
-            # print("labels",labels.size())
-
-            # Shift so that tokens < n predict n
-            shift_logits = lm_logits.contiguous()
-            shift_labels = labels.contiguous()
-
-            # print("shift_logits",shift_logits.size())
-            # print("shift_labels",shift_labels.size())
-
             dni_labels = dni_labels.to(dni_points.device)
-            shift_points = dni_labels.transpose(-1, -2).to(dni_points.dtype)
-            shift_dni = dni_points.contiguous()
-
-            # print("shift_points",shift_points.size())
-            # print("shift_dni",shift_dni.size())
+            dni_labels = dni_labels.transpose(-1, -2).to(dni_points.dtype)
 
             # Flatten the tokens
             loss_fct = CrossEntropyLoss()
             loss = loss_fct(
-                shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1)
+                lm_logits.view(-1, lm_logits.size(-1)), labels.view(-1)
             )
             dni_loss_fct = MSELoss()
-            dni_loss = dni_loss_fct(shift_points, shift_dni)
+            dni_loss = dni_loss_fct(dni_points, dni_labels)
 
             # if dni_loss >= self.dni_loss_threshold or dni_loss >= loss:
             #     loss = loss + dni_loss
