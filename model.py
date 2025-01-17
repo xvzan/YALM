@@ -110,7 +110,7 @@ class YALMGPT2Model(GPT2PreTrainedModel):
             # print("shift_labels",shift_labels.size())
 
             dni_labels = dni_labels.to(dni_points.device)
-            shift_points = dni_points.contiguous()
+            shift_points = dni_labels.transpose(-1, -2).to(dni_points.dtype)
             shift_dni = dni_points.contiguous()
 
             # print("shift_points",shift_points.size())
