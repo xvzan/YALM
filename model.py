@@ -100,7 +100,7 @@ class YALMGPT2Model(GPT2PreTrainedModel):
             labels = labels.to(lm_logits.device)
 
             dni_labels = dni_labels.to(dni_points.device)
-            dni_labels = dni_labels.transpose(-1, -2).to(dni_points.dtype)
+            dni_labels = dni_labels.to(dni_points.dtype)
 
             # Flatten the tokens
             loss_fct = CrossEntropyLoss()
