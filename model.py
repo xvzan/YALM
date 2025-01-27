@@ -104,9 +104,7 @@ class YALMGPT2Model(GPT2PreTrainedModel):
 
             # Flatten the tokens
             loss_fct = CrossEntropyLoss()
-            loss = loss_fct(
-                lm_logits.view(-1, lm_logits.size(-1)), labels.view(-1)
-            )
+            loss = loss_fct(lm_logits.view(-1, lm_logits.size(-1)), labels.view(-1))
             dni_loss_fct = MSELoss()
             dni_loss = dni_loss_fct(dni_points, dni_labels)
 

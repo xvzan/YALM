@@ -29,11 +29,11 @@ class CoachCollator(DataCollatorMixin):
 
     def err_tokens_at_len(self, length: int):
         random_index = random.randint(0, len(self.err_source) - 1)
-        erids = self.tokenizer(self.err_source[random_index]["text"], truncation=False)["input_ids"]
-        token_start = random.randint(0, len(erids))
-        tks = erids[
-            token_start : token_start + length
+        erids = self.tokenizer(self.err_source[random_index]["text"], truncation=False)[
+            "input_ids"
         ]
+        token_start = random.randint(0, len(erids))
+        tks = erids[token_start : token_start + length]
         lackcount = length - len(tks)
         if lackcount > 0:
             tks = tks + self.err_tokens_at_len(lackcount)
@@ -145,7 +145,9 @@ class CoachCollator(DataCollatorMixin):
             edited["labels"] = original
             # del example["attention_mask"]
             edited["input_ids"] = modified
-            edited["dni_labels"] = torch.stack([torch.sqrt(torch.tensor(deletes)) * 64, torch.tensor(inserts) * 16]).transpose(-1, -2)
+            edited["dni_labels"] = torch.stack(
+                [torch.sqrt(torch.tensor(deletes)) * 64, torch.tensor(inserts) * 16]
+            ).transpose(-1, -2)
             edited_features.append(edited)
         first = edited_features[0]
         batch = {}

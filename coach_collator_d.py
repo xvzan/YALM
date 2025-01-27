@@ -112,7 +112,7 @@ class CoachCollator(DataCollatorMixin):
                 ec = ec + ec2
                 _, mm, ii, dd, _, _, ec = self.recursion_modify(
                     original, mm, ii, dd, he2, ts2, ec
-                    )
+                )
                 modified = mm + modified[he + 1 :]
                 inserts = ii + inserts[he + 1 :]
                 deletes = dd + deletes[he + 1 :]
