@@ -28,6 +28,9 @@ class CoachCollator(DataCollatorMixin):
         return t, im, dm
 
     def err_tokens_at_len(self, length: int):
+        if random.random() < 0.03:
+            pads = self.pad_base * length
+            return pads
         random_index = random.randint(0, len(self.err_source) - 1)
         erids = self.tokenizer(self.err_source[random_index]["text"], truncation=False)[
             "input_ids"
@@ -146,7 +149,7 @@ class CoachCollator(DataCollatorMixin):
             # del example["attention_mask"]
             edited["input_ids"] = modified
             edited["dni_labels"] = torch.stack(
-                [torch.sqrt(torch.tensor(deletes)) * 64, torch.tensor(inserts) * 16]
+                [torch.sqrt(torch.tensor(deletes)) * 0.58, torch.tensor(inserts)]
             ).transpose(-1, -2)
             edited_features.append(edited)
         first = edited_features[0]
