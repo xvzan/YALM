@@ -12,7 +12,7 @@ class YALMGPT2Config(GPT2Config):
 
     def __init__(
         self,
-        dni_loss_threshold=0.01,
+        dni_loss_threshold=0.003,
         **kwargs,
     ):
         self.dni_loss_threshold = dni_loss_threshold
