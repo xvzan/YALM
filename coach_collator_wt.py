@@ -148,9 +148,13 @@ class CoachCollator(DataCollatorMixin):
             edited["labels"] = original
             # del example["attention_mask"]
             edited["input_ids"] = modified
-            edited["dni_labels"] = torch.stack(
-                [torch.sqrt(torch.tensor(deletes)) * 0.58, torch.tensor(inserts)]
-            ).transpose(-1, -2)
+            edited["dni_labels"] = (
+                torch.stack(
+                    [torch.sqrt(torch.tensor(deletes)) * 0.58, torch.tensor(inserts)]
+                )
+                .transpose(-1, -2)
+                .sum(-1, True)
+            )
             edited_features.append(edited)
         first = edited_features[0]
         batch = {}
