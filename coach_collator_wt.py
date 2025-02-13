@@ -17,7 +17,7 @@ class CoachCollator(DataCollatorMixin):
         del t[ds:de]
         del im[ds:de]
         del dm[ds:de]
-        dm[ds - 1] = min(dc, 3)
+        dm[ds - 1] = min(dc, 1)
 
     def insert_tokens(self, istart, ti, t, im, dm):
         t = t[:istart] + ti + t[istart:]
