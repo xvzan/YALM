@@ -4,6 +4,8 @@ from transformers import GPT2TokenizerFast, TrainingArguments, Trainer
 from model import YALMGPT2Model, YALMGPT2Config
 from coach_collator_wt import CoachCollator
 
+import torch
+torch.set_default_dtype(torch.bfloat16)
 
 new_tokenizer = GPT2TokenizerFast.from_pretrained(
     "openai-community/gpt2", cache_dir="hfcache"
@@ -29,7 +31,8 @@ training_args = TrainingArguments(
     num_train_epochs=1,
     per_device_train_batch_size=2,
     output_dir="./t2",
-    label_names=["output_ids", "dni_labels", "text"],
+    label_names=["output_ids", "dni_labels", "text", "dni_masks", "loss_mask"],
+    bf16=True,
     # deepspeed=dscfg,
 )
 trainer = Trainer(

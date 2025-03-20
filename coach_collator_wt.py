@@ -10,7 +10,7 @@ class CoachCollator(DataCollatorMixin):
     def __init__(self, err_source, tokenizer):
         self.err_source = err_source
         self.tokenizer = tokenizer
-        self.pad_base = self.tokenizer(self.tokenizer.pad_token)["input_ids"]
+        self.pad_base = self.tokenizer(self.tokenizer.pad_token)["input_ids"][-1:]
 
     def delete_tokens(self, ds, dc, t, im, dm):
         de = ds + dc
@@ -119,6 +119,13 @@ class CoachCollator(DataCollatorMixin):
             original, modified, inserts, deletes, _ = self.recursion_modify(
                 example["input_ids"], example["input_ids"], [], [], 0, 0
             )
+            mask_length = len(original) + 2
+            if mask_length >= self.tokenizer.model_max_length:
+                loss_mask = [1] * self.tokenizer.model_max_length
+            else:
+                loss_mask = [1] * mask_length + [0] * (
+                    self.tokenizer.model_max_length - mask_length
+                )
             if len(original) > self.tokenizer.model_max_length:
                 original = original[: self.tokenizer.model_max_length]
             if len(modified) > self.tokenizer.model_max_length:
@@ -146,11 +153,20 @@ class CoachCollator(DataCollatorMixin):
                 )
             # result = {}
             edited["labels"] = original
+            edited["loss_mask"] = loss_mask
             # del example["attention_mask"]
             edited["input_ids"] = modified
-            edited["dni_labels"] = torch.stack(
-                [torch.sqrt(torch.tensor(deletes)) * 0.58, torch.tensor(inserts)]
-            ).transpose(-1, -2)
+            t_del = torch.tensor(deletes)
+            real_mask_len = min(mask_length, self.tokenizer.model_max_length)
+            dmn = min(sum(deletes), self.tokenizer.model_max_length)
+            m_del = torch.zeros_like(t_del)
+            m_del[torch.randperm(real_mask_len)[:dmn]] = 1
+            t_ins = torch.tensor(inserts)
+            imn = min(sum(inserts), self.tokenizer.model_max_length)
+            m_ins = torch.zeros_like(t_ins)
+            m_ins[torch.randperm(real_mask_len)[:imn]] = 1
+            edited["dni_labels"] = torch.stack([t_del, t_ins]).transpose(-1, -2)
+            edited["dni_masks"] = torch.stack([m_del, m_ins]).transpose(-1, -2)
             edited_features.append(edited)
         first = edited_features[0]
         batch = {}
