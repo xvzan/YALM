@@ -120,6 +120,7 @@ class CoachCollator(DataCollatorMixin):
                 example["input_ids"], example["input_ids"], [], [], 0, 0
             )
             mask_length = len(original) + 2
+            real_mask_len = len(modified) + 2
             if mask_length >= self.tokenizer.model_max_length:
                 loss_mask = [1] * self.tokenizer.model_max_length
             else:
@@ -157,7 +158,7 @@ class CoachCollator(DataCollatorMixin):
             # del example["attention_mask"]
             edited["input_ids"] = modified
             t_del = torch.tensor(deletes)
-            real_mask_len = min(mask_length, self.tokenizer.model_max_length)
+            real_mask_len = min(real_mask_len, self.tokenizer.model_max_length)
             dmn = min(sum(deletes), self.tokenizer.model_max_length)
             m_del = torch.zeros_like(t_del)
             m_del[torch.randperm(real_mask_len)[:dmn]] = 1
