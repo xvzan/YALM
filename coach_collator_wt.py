@@ -127,6 +127,12 @@ class CoachCollator(DataCollatorMixin):
                 loss_mask = [1] * mask_length + [0] * (
                     self.tokenizer.model_max_length - mask_length
                 )
+            if real_mask_len >= self.tokenizer.model_max_length:
+                attention_mask = [1] * self.tokenizer.model_max_length
+            else:
+                attention_mask = [1] * real_mask_len + [0] * (
+                    self.tokenizer.model_max_length - real_mask_len
+                )
             if len(original) > self.tokenizer.model_max_length:
                 original = original[: self.tokenizer.model_max_length]
             if len(modified) > self.tokenizer.model_max_length:
@@ -153,18 +159,26 @@ class CoachCollator(DataCollatorMixin):
                     self.tokenizer.model_max_length - len(deletes)
                 )
             # result = {}
+            original = torch.tensor(original)
+            modified = torch.tensor(modified)
+            loss_mask = torch.tensor(loss_mask)
+            diff = torch.where(original == modified, 0, 1)
+            rand = torch.rand(diff.size())
+            threshold = (torch.sum(diff) + 1) / (torch.sum(loss_mask) * 5)
+            diff_and_rand = torch.where(rand < threshold, 1, diff)
+            loss_mask = loss_mask * diff_and_rand
             edited["labels"] = original
             edited["loss_mask"] = loss_mask
-            # del example["attention_mask"]
+            edited["attention_mask"] = attention_mask
             edited["input_ids"] = modified
             t_del = torch.tensor(deletes)
             real_mask_len = min(real_mask_len, self.tokenizer.model_max_length)
             dmn = min(sum(deletes), self.tokenizer.model_max_length)
-            m_del = torch.zeros_like(t_del)
+            m_del = torch.clamp(t_del, 0, 1)
             m_del[torch.randperm(real_mask_len)[:dmn]] = 1
             t_ins = torch.tensor(inserts)
             imn = min(sum(inserts), self.tokenizer.model_max_length)
-            m_ins = torch.zeros_like(t_ins)
+            m_ins = torch.clamp(t_ins, 0, 1)
             m_ins[torch.randperm(real_mask_len)[:imn]] = 1
             edited["dni_labels"] = torch.stack([t_del, t_ins]).transpose(-1, -2)
             edited["dni_masks"] = torch.stack([m_del, m_ins]).transpose(-1, -2)
