@@ -58,16 +58,16 @@ class CoachCollator(DataCollatorMixin):
 
         if is_delete:
             # 删除词元
-            delete_count = random.randint(1, num_tokens - 2)
+            delete_count = random.randint(1, int(max(2, (num_tokens - 2) / 3)))
             delete_start = random.randint(1, num_tokens - delete_count)
             self.delete_tokens(
                 delete_start, delete_count, modified_tokens, insert_marks, delete_marks
             )
             ts = delete_start
             # print(delete_marks[:he])
-            if random.random() < 0.9 and delete_count <= num_tokens / 2:
+            if random.random() < 0.9 and delete_count <= num_tokens / 3:
                 insert_count = random.randint(
-                    1, min(int(delete_count * 1.5), int(num_tokens * 0.5))
+                    1, max(2, min(int(delete_count * 1.5), int(num_tokens * 0.3)))
                 )
                 modified_tokens, insert_marks, delete_marks = self.insert_tokens(
                     delete_start,
@@ -79,7 +79,7 @@ class CoachCollator(DataCollatorMixin):
                 ts += insert_count
         else:
             if random.random() < 0.9:
-                insert_count = random.randint(1, int(num_tokens * 0.5))
+                insert_count = random.randint(1, int(max(2, num_tokens * 0.3)))
                 insert_start = random.randint(1, num_tokens)
                 modified_tokens, insert_marks, delete_marks = self.insert_tokens(
                     insert_start,
@@ -98,7 +98,7 @@ class CoachCollator(DataCollatorMixin):
     def recursion_modify(self, original, modified, inserts, deletes, ts, ec):
         if (
             ts < len(modified) - 2
-            and ec / len(original) < 0.5
+            and ec / len(original) < 0.3
             and random.random() < 0.95
         ):
             _, mm, ii, dd, ts2, ec2 = self.generate_data(modified[ts:])
@@ -164,9 +164,11 @@ class CoachCollator(DataCollatorMixin):
             loss_mask = torch.tensor(loss_mask)
             diff = torch.where(original == modified, 0, 1)
             rand = torch.rand(diff.size())
-            threshold = (torch.sum(diff) + 1) / (torch.sum(loss_mask) * 5)
+            threshold = (torch.sum(diff) + 1) / (torch.sum(loss_mask) * 10)
             diff_and_rand = torch.where(rand < threshold, 1, diff)
             loss_mask = loss_mask * diff_and_rand
+            loss_power = torch.pow(0.995, torch.cumsum(loss_mask, dim=0))
+            loss_mask = loss_mask * loss_power
             edited["labels"] = original
             edited["loss_mask"] = loss_mask
             edited["attention_mask"] = attention_mask
